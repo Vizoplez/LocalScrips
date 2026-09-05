@@ -1,11 +1,10 @@
 -- Get game info
-local gameInfo = get_game_info()
-local gameID = gameInfo.GameID or gameInfo.gameId or gameInfo.id or gameInfo.PlaceID
-local gameName = gameInfo.GameName or gameInfo.name or gameInfo.Name or "Unknown Game"
+local gameID = game.PlaceId
+local gameName = game.Name or "Unknown Game"
 
 -- Sanity check
 if not gameID then
-	warn("Failed to get game ID from get_game_info()")
+	warn("Failed to get game ID")
 	return
 end
 
@@ -13,13 +12,22 @@ end
 local baseUrl = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Games/"
 local gameUrl = baseUrl .. tostring(gameID) .. "/main.lua"
 
--- Load the UI library
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/ExploitUILib.lua"))()
+-- Load the UI library (returns the ExploitUILib table)
+local UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/ExploitUILib.lua"))()
+
+-- Create a UI instance — Sub, Tab, Start etc. live on instances, not the library
+local UI = UILib.new({
+	title = gameName,
+	x = 200, y = 100,
+	width = 700, height = 500,
+	toggleKey = Enum.KeyCode.Home
+})
 
 -- Load the game-specific module
 local GameModuleUILoader = loadstring(game:HttpGet(gameUrl))()
+print("Loaded module for: " .. gameUrl)
 
--- Initialize and start
+-- Initialize with the UI instance (not the library table)
 GameModuleUILoader.Init(UI)
 UI:Start()
 
