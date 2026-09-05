@@ -15,7 +15,7 @@
 -- getgenv().RAYFIELD_ASSET_ID = 123456789
 
 -- ── Load Rayfield ──
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main2.lua'))()
 
 -- ── Services ──
 local Players = game:GetService("Players")
@@ -27,7 +27,7 @@ local UserInputService = game:GetService("UserInputService")
 -- ==========================================================
 local PlaceId = game.PlaceId
 local GitHubURL = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Games/"
-local ScriptURL = GitHubURL .. tostring(PlaceId) .. "/main.lua"
+local ScriptURL = GitHubURL .. tostring(PlaceId) .. "/main2.lua"
 
 local GameScriptLoaded = false
 
