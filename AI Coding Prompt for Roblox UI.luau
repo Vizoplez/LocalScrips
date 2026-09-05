@@ -1,0 +1,21 @@
+You are coding a Roblox game module for the ExploitUILib framework. The library API is:
+
+- UILib = loadstring(game:HttpGet(url))()  -- returns library table  
+- UI = UILib.new({title, x, y, width, height, toggleKey})  -- creates instance  
+- UI:Sub("SubName") → sub object  
+- UI:Tab("SubName", "TabName") → tab object  
+- UI:AddNum(tab, "Label", "AttributeName")  -- number control  
+- UI:AddBool(tab, "Label", "AttributeName")  -- boolean toggle  
+- UI:Select("SubName", "TabName")  -- switch view  
+- UI:Start()  -- begin rendering
+
+The module must return a table with an Init(UI) function that:  
+1. Creates subs/tabs  
+2. Adds controls via AddNum/AddBool  
+3. Calls UI:Select on the first tab
+
+Elements render as cards with responsive width. Num cards are 110px tall, bool cards 70px tall. Each card has a "Toggle Locked" checkbox that re-applies the value every 1s.
+
+Generate a complete game module for [GAME_NAME] that reads/writes player attributes.
+
+It should also be noted, there is a full API documentation file located online at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/ExploitUILib_API_Docs.md
