@@ -1,5 +1,5 @@
 --[[
-ExploitUILib — Drawing-based UI Framework
+MainUILib — Drawing-based UI Framework
 ==========================================
 A modular, lightweight UI library using Roblox's Drawing API.
 Zero ScreenGui instances (except one hidden TextBox for keyboard input).
@@ -14,7 +14,7 @@ Features:
   - 1-second lock loop reapplies confirmed values
 
 USAGE:
-  local UI = loadstring(game:HttpGet("url/to/ExploitUILib.lua"))()
+  local UI = loadstring(game:HttpGet("url/to/main.lua"))()
   local myUI = UI.new({
     title = "My Menu",           -- optional, defaults to game.Name .. " Menu"
     x = 200, y = 100,
@@ -32,7 +32,7 @@ USAGE:
   myUI:Start()
 ]]
 
-local ExploitUILib = {}
+local mainUILib = {}
 
 -- ── Internal services ──
 local UIS        = game:GetService("UserInputService")
@@ -47,7 +47,7 @@ local function setAttr(k, v) player:SetAttribute(k, v) end
 -- ============================================================
 --  UI INSTANCE
 -- ============================================================
-function ExploitUILib.new(config)
+function mainUILib.new(config)
   config = config or {}
   local self = {}
 
@@ -553,4 +553,4 @@ function ExploitUILib.new(config)
   return self
 end
 
-return ExploitUILib
+return mainUILib
