@@ -14,8 +14,8 @@ The module must return a table with an Init(UI) function that:
 2. Adds controls via AddNum/AddBool  
 3. Calls UI:Select on the first tab
 
-Elements render as cards with responsive width. Num cards are 110px tall, bool cards 70px tall. Each card has a "Toggle Locked" checkbox that re-applies the value every 1s.
+Elements render as cards with responsive width. Num cards are 110px tall, bool cards 70px tall. Each card has a "Toggle Locked" checkbox that re-applies the value every 2s.
 
-Generate a complete game module for [GAME_NAME] that reads/writes player attributes.
+Generate a complete module that performs the tasks required, with example code taken into consideration.
 
 It should also be noted, there is a full API documentation file located online at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/ExploitUILib_API_Docs.md
