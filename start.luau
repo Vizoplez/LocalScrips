@@ -12,8 +12,8 @@ end
 local baseUrl = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Games/"
 local gameUrl = baseUrl .. tostring(gameID) .. "/main.lua"
 
--- Load the UI library (returns the ExploitUILib table)
-local UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/ExploitUILib.lua"))()
+-- Load the UI library (returns the mainUILib table)
+local UILib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua"))()
 
 -- Create a UI instance — Sub, Tab, Start etc. live on instances, not the library
 local UI = UILib.new({
