@@ -1,9 +1,9 @@
-You are coding a Roblox UI module for a LUA UI module called Rayfield.
+You are coding a Roblox UI API Module for an executor LuaU UI called Rayfield.
 
-Please use the full API documentation provided (located online at github: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs.md)
+Please use the full API documentation provided (located online at github: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs2.md) in your coding efforts. Do not generate new functions unless necessary for required tasks, prefer API calls to the UI module instead.
 
-Also, with the Documentation provided, and Github link: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua for the code itself:
+Also, with the Documentation provided,and Github link: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main2.lua for the code itself:
 
-{ TASK INPUT HERE }
+{Input}
 
-Make sure to be concise with your answer, and provide files as required.
+Do not re-initialise the UI unless required.
