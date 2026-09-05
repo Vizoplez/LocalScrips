@@ -1,15 +1,20 @@
 You are coding a Roblox module for an executor LuaU UI framework. The library API is:
 
-UILib = loadstring(game:HttpGet(url))() -- returns library table (only call on sub modules
+UILib = loadstring(game:HttpGet(url))() -- returns library table (only call on sub modules)
 UI = UILib.new({title, x, y, width, height, toggleKey}) -- creates instance
-UI:Sub("SubName") → sub object
-UI:Tab("SubName", "TabName") → tab object
+UI:Sub("SubName") → Sub Category (rename function to SubCategory)
+UI:TabObject("TabName","TabObj") -> Tab Subobject (handles objects inside of tabs)
+UI:Tab("SubName", "TabName") → tab object (Tab sits below subobjects to make selectable sub-subcategories
 UI:AddNum(tab, "Label", "AttributeName") -- number control
 UI:AddBool(tab, "Label", "AttributeName") -- boolean toggle
 UI:Select("SubName", "TabName") -- switch view
-UI:Start() -- begin rendering
+UI:Start() -- begin rendering (only use in main script once all submodules are loaded, wait until then to continue rendering)
 
 Please use the full API documentation provided (located online at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs.md ) to generate a new UI module specifically within the next provided requirements, with the above functions in mind - and the github link as a base to work off of.
+
+Make sure to enable dynamically adding modules from loadstrings please (with a confirm button)
+
+Make a settings tab that enables customising the key required to make the UI visible and invisible (Home by default) and make it save between loads
 
 Make sure if that there are too many elements to fit inside the main window, to only draw the scroll menu up to the tab end, then dynamically adjust to allow the user to scroll and see all elements without resizing the main window.
 

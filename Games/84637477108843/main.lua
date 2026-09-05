@@ -1,7 +1,7 @@
 --[[
 	PlayerTab.lua — Player subcategory with Money & Crate controls
 	===============================================================
-	Requires: ExploitUILib.lua (load it first or alongside this)
+	Requires: main.lua (load it first or alongside this)
 
 	This script imports the UI library and builds:
 	- Subcategory: "Player"
@@ -18,7 +18,7 @@
 		local UI = loadstring(game:HttpGet("http://pastebin.com/raw/..."))()
 
 		-- Option B: If you merged them, just do:
-		local UI = loadstring(game:HttpGet("url/to/ExploitUILib.lua"))()
+		local UI = loadstring(game:HttpGet("url/to/main.lua"))()
 		local playerTab = loadstring(game:HttpGet("url/to/PlayerTab.lua"))()
 		playerTab:Init(UI)
 
