@@ -1,21 +1,22 @@
-You are coding a Roblox game module for the ExploitUILib framework. The library API is:
+You are coding a Roblox module for an executor LuaU UI framework. The library API is:
 
-- UILib = loadstring(game:HttpGet(url))()  -- returns library table  
-- UI = UILib.new({title, x, y, width, height, toggleKey})  -- creates instance  
-- UI:Sub("SubName") → sub object  
-- UI:Tab("SubName", "TabName") → tab object  
-- UI:AddNum(tab, "Label", "AttributeName")  -- number control  
-- UI:AddBool(tab, "Label", "AttributeName")  -- boolean toggle  
-- UI:Select("SubName", "TabName")  -- switch view  
-- UI:Start()  -- begin rendering
+UILib = loadstring(game:HttpGet(url))() -- returns library table (only call on sub modules
+UI = UILib.new({title, x, y, width, height, toggleKey}) -- creates instance
+UI:Sub("SubName") → sub object
+UI:Tab("SubName", "TabName") → tab object
+UI:AddNum(tab, "Label", "AttributeName") -- number control
+UI:AddBool(tab, "Label", "AttributeName") -- boolean toggle
+UI:Select("SubName", "TabName") -- switch view
+UI:Start() -- begin rendering
 
-The module must return a table with an Init(UI) function that:  
-1. Creates subs/tabs  
-2. Adds controls via AddNum/AddBool  
-3. Calls UI:Select on the first tab
+Please use the full API documentation provided (located online at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs.md ) to generate a new UI module specifically within the next provided requirements, with the above functions in mind - and the github link as a base to work off of.
 
-Elements render as cards with responsive width. Num cards are 110px tall, bool cards 70px tall. Each card has a "Toggle Locked" checkbox that re-applies the value every 2s.
+Make sure if that there are too many elements to fit inside the main window, to only draw the scroll menu up to the tab end, then dynamically adjust to allow the user to scroll and see all elements without resizing the main window.
 
-Generate a complete module that performs the tasks required, with example code taken into consideration.
+Please also rename the Sub function to Subcategory in the code and documentation you will later write. Please also add a way to add objects to tabs dynamically, and remove them dynamically too (assign them a number or other identifier that can be easily found - display in a small font in top right of objects).
 
-It should also be noted, there is a full API documentation file located online at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/ExploitUILib_API_Docs.md
+Also apply the resizing logic to all elements as requred, you can use up the entire space of the main window (include a way in the script to get and dynamically adjust UI element size). Please keep function names and such the same, but you may change rendering methods and other coding, so long as the inputs remain the same. You may also add new functions as required. Please also include a second file including all the new documentation for every new function and feature and such, optimised for AI usage in the same format as the first one, building off of that data.
+
+Remember, your main focus should be maintaining compatability while fixing issues, rather than entirely rewriting the code.
+
+Knowing this, please get the script from the following raw github link. This script works, but nothing is selectable, and nothing can be clicked, resized, or dragged. Please troubleshoot it for issues, and rewrite it following the above and the documentation provided. Github link: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua
