@@ -1,27 +1,9 @@
-You are coding a Roblox module for an executor LuaU UI framework. The library API is:
+You are coding a Roblox UI module for a LUA UI module called Rayfield.
 
-UILib = loadstring(game:HttpGet(url))() -- returns library table (only call on sub modules)
-UI = UILib.new({title, x, y, width, height, toggleKey}) -- creates instance
-UI:Sub("SubName") → Sub Category (rename function to SubCategory)
-UI:TabObject("TabName","TabObj") -> Tab Subobject (handles objects inside of tabs)
-UI:Tab("SubName", "TabName") → tab object (Tab sits below subobjects to make selectable sub-subcategories
-UI:AddNum(tab, "Label", "AttributeName") -- number control
-UI:AddBool(tab, "Label", "AttributeName") -- boolean toggle
-UI:Select("SubName", "TabName") -- switch view
-UI:Start() -- begin rendering (only use in main script once all submodules are loaded, wait until then to continue rendering)
+Please use the full API documentation provided (located online at github: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs.md)
 
-Please use the full API documentation provided (located online at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs.md ) to generate a new UI module specifically within the next provided requirements, with the above functions in mind - and the github link as a base to work off of.
+Also, with the Documentation provided, and Github link: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua for the code itself:
 
-Make sure to enable dynamically adding modules from loadstrings please (with a confirm button)
+{ TASK INPUT HERE }
 
-Make a settings tab that enables customising the key required to make the UI visible and invisible (Home by default) and make it save between loads
-
-Make sure if that there are too many elements to fit inside the main window, to only draw the scroll menu up to the tab end, then dynamically adjust to allow the user to scroll and see all elements without resizing the main window.
-
-Please also rename the Sub function to Subcategory in the code and documentation you will later write. Please also add a way to add objects to tabs dynamically, and remove them dynamically too (assign them a number or other identifier that can be easily found - display in a small font in top right of objects).
-
-Also apply the resizing logic to all elements as requred, you can use up the entire space of the main window (include a way in the script to get and dynamically adjust UI element size). Please keep function names and such the same, but you may change rendering methods and other coding, so long as the inputs remain the same. You may also add new functions as required. Please also include a second file including all the new documentation for every new function and feature and such, optimised for AI usage in the same format as the first one, building off of that data.
-
-Remember, your main focus should be maintaining compatability while fixing issues, rather than entirely rewriting the code.
-
-Knowing this, please get the script from the following raw github link. This script works, but nothing is selectable, and nothing can be clicked, resized, or dragged. Please troubleshoot it for issues, and rewrite it following the above and the documentation provided. Github link: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua
+Make sure to be concise with your answer, and provide files as required.
