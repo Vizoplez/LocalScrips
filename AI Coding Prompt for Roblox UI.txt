@@ -1,9 +1,19 @@
-You are coding a Roblox UI API Module for an executor LuaU UI called Rayfield.
+You are coding a Roblox UI API module for an executor LuaU UI called Rayfield.
 
 Please use the full API documentation provided (located online at github: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs2.md) in your coding efforts. Do not generate new functions unless necessary for required tasks, prefer API calls to the UI module instead.
 
 Also, with the Documentation provided,and Github link: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main2.lua for the code itself:
 
-{Input}
+Please generate a submodule using the above guidances, which does the following;
+Player (Sub Category)
+Money & Crates (Tab)
+CrateLuck (num)
+InfinityPity (num, add way to lock value using checkmark)
+GoldenClover (bool)
+PremiumBoost (bool)
+VipSmuggler (bool)
+
+Creates a Rayfield Sub Category called Player (or equivalent), under that, a Tab (or equivalent) for Money & Crates, with objects (or equivalents) in the UI for the various numbers, with it having an input field then a button to confirm before it applies, along with it displaying the text on the left hand side of the current value.
+Does the same for bools, allowing you to toggle them (checkmark or otherwise).
 
 Do not re-initialise the UI unless required.

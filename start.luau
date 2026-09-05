@@ -15,7 +15,7 @@
 -- getgenv().RAYFIELD_ASSET_ID = 123456789
 
 -- ── Load Rayfield ──
-local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main2.lua'))()
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua'))()
 
 -- ── Services ──
 local Players = game:GetService("Players")
@@ -27,7 +27,7 @@ local UserInputService = game:GetService("UserInputService")
 -- ==========================================================
 local PlaceId = game.PlaceId
 local GitHubURL = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Games/"
-local ScriptURL = GitHubURL .. tostring(PlaceId) .. "/main2.lua"
+local ScriptURL = GitHubURL .. tostring(PlaceId) .. "/main.lua"
 
 local GameScriptLoaded = false
 
@@ -51,6 +51,20 @@ local function LoadGameScript()
     else
         return false, "No game script found for PlaceId " .. tostring(PlaceId)
     end
+end
+
+-- ==========================================================
+--  HELPER: Safe health reader
+-- ==========================================================
+local function GetPlayerHealth()
+    local char = Player.Character
+    if char then
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            return math.floor(humanoid.Health)
+        end
+    end
+    return 100
 end
 
 -- ==========================================================
@@ -85,7 +99,7 @@ local PlayerLabel = MainTab:CreateLabel(
 )
 
 local HealthLabel = MainTab:CreateLabel(
-    "Health: " .. math.floor(Player.Health or 100),
+    "Health: " .. GetPlayerHealth(),
     "heart",
     Color3.fromRGB(220, 120, 120),
     false
@@ -95,7 +109,7 @@ spawn(function()
     while task.wait(1) do
         pcall(function()
             HealthLabel:Set(
-                "Health: " .. math.floor(Player.Health),
+                "Health: " .. GetPlayerHealth(),
                 "heart",
                 Color3.fromRGB(220, 120, 120),
                 false
