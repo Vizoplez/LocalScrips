@@ -1,243 +1,132 @@
 --[[
-    Player Settings Submodule — Rayfield UI
-    Tab: Player → Section: Money & Crates
-    
-    Fields:
-        CrateLuck    (number) — Input + Confirm button, displays current value
-        InfinityPity (number) — Input + Confirm button, lockable via toggle
-        GoldenClover (bool)   — Toggle
-        PremiumBoost (bool)   — Toggle
-        VipSmuggler  (bool)   — Toggle
-]]
+PlayerSubModule.lua
+=====================
+Submodule for MainUILib — creates a Player > Money & Crates section
+with number controls (CrateLuck, InfinityPity) and bool toggles
+(GoldenClover, PremiumBoost, VipSmuggler).
 
-local PlayerSettings = {
-    -- Internal state
-    _state = {
-        CrateLuck = 0,
-        InfinityPity = 0,
-        InfinityPityLocked = false,
-        GoldenClover = false,
-        PremiumBoost = false,
-        VipSmuggler = false,
-    },
+Usage:
+    local PlayerUI = loadstring(game:HttpGet("url/to/this/file.lua"))()
+    PlayerUI:Open()
 
-    -- Callbacks the host can set
-    OnCrateLuckChanged = nil,      -- function(newValue)
-    OnInfinityPityChanged = nil,   -- function(newValue, isLocked)
-    OnGoldenCloverChanged = nil,   -- function(newValue)
-    OnPremiumBoostChanged = nil,   -- function(newValue)
-    OnVipSmugglerChanged = nil,    -- function(newValue)
+Or integrate with an existing UI instance:
+    local PlayerUI = loadstring(game:HttpGet("url/to/this/file.lua"))()
+    PlayerUI:Init(existingUI)  -- skips creating a new UI
+--]]
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- ── Default attribute values ──
+local DEFAULTS = {
+    CrateLuck    = 0,
+    InfinityPity = 0,
+    GoldenClover = false,
+    PremiumBoost = false,
+    VipSmuggler  = false,
 }
 
--- ─── Getters / Setters ───────────────────────────────────────────────────
+local PlayerModule = {}
 
-function PlayerSettings:GetCrateLuck()
-    return self._state.CrateLuck
-end
-
-function PlayerSettings:SetCrateLuck(value)
-    value = tonumber(value) or 0
-    self._state.CrateLuck = value
-    if self._CrateLuckLabel then
-        self._CrateLuckLabel:Set("CrateLuck: " .. tostring(value))
-    end
-    if self.OnCrateLuckChanged then
-        self.OnCrateLuckChanged(value)
+-- ── Ensure all attributes exist on the player ──
+local function initAttributes()
+    for k, v in pairs(DEFAULTS) do
+        if player:GetAttribute(k) == nil then
+            player:SetAttribute(k, v)
+        end
     end
 end
 
-function PlayerSettings:GetInfinityPity()
-    return self._state.InfinityPity
-end
-
-function PlayerSettings:SetInfinityPity(value)
-    value = tonumber(value) or 0
-    self._state.InfinityPity = value
-    if self._InfinityPityLabel then
-        self._InfinityPityLabel:Set("InfinityPity: " .. tostring(value))
+-- ── Load the UI library ──
+local function loadUILib()
+    local url = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua"
+    local ok, result = pcall(game.HttpGet, game, url)
+    if not ok then
+        warn("[PlayerModule] Failed to load MainUILib:", result)
+        return nil
     end
-    if self.OnInfinityPityChanged then
-        self.OnInfinityPityChanged(value, self._state.InfinityPityLocked)
+    local ok2, lib = pcall(loadstring, result)
+    if not ok2 then
+        warn("[PlayerModule] Failed to compile MainUILib:", lib)
+        return nil
     end
+    return lib()
 end
 
-function PlayerSettings:IsInfinityPityLocked()
-    return self._state.InfinityPityLocked
+-- ── Build the UI elements ──
+local function buildUI(UI)
+    initAttributes()
+
+    local sub  = UI:Sub("Player")
+    local tab  = UI:Tab("Player", "Money & Crates")
+
+    -- Number controls
+    UI:AddNum(tab, "CrateLuck",    "CrateLuck")
+    UI:AddNum(tab, "InfinityPity", "InfinityPity")
+
+    -- Bool controls
+    UI:AddBool(tab, "GoldenClover", "GoldenClover")
+    UI:AddBool(tab, "PremiumBoost", "PremiumBoost")
+    UI:AddBool(tab, "VipSmuggler",  "VipSmuggler")
+
+    UI:Select("Player", "Money & Crates")
 end
 
-function PlayerSettings:SetInfinityPityLocked(locked)
-    self._state.InfinityPityLocked = locked
-    if self._InfinityPityInput then
-        self._InfinityPityInput.InputFrame.InputBox.Interactable = not locked
+-- ── Open: creates a fresh UI instance and starts it ──
+function PlayerModule:Open(config)
+    config = config or {}
+    if self._ui and self._started then
+        self._ui:SetVisible(true)
+        return self._ui
     end
-    if self._InfinityPityButton then
-        -- visually indicate disabled state (we can't fully disable the button in Rayfield,
-        -- but we can skip its callback when locked)
-    end
-    if self.OnInfinityPityChanged then
-        self.OnInfinityPityChanged(self._state.InfinityPity, locked)
-    end
-end
 
-function PlayerSettings:GetGoldenClover()
-    return self._state.GoldenClover
-end
+    local lib = loadUILib()
+    if not lib then return nil end
 
-function PlayerSettings:SetGoldenClover(value)
-    self._state.GoldenClover = value
-    if self._GoldenCloverToggle then
-        self._GoldenCloverToggle:Set(value)
-    end
-end
-
-function PlayerSettings:GetPremiumBoost()
-    return self._state.PremiumBoost
-end
-
-function PlayerSettings:SetPremiumBoost(value)
-    self._state.PremiumBoost = value
-    if self._PremiumBoostToggle then
-        self._PremiumBoostToggle:Set(value)
-    end
-end
-
-function PlayerSettings:GetVipSmuggler()
-    return self._state.VipSmuggler
-end
-
-function PlayerSettings:SetVipSmuggler(value)
-    self._state.VipSmuggler = value
-    if self._VipSmugglerToggle then
-        self._VipSmugglerToggle:Set(value)
-    end
-end
-
--- ─── UI Builder ───────────────────────────────────────────────────────────
-
---- Builds the Player tab and Money & Crates section.
---- @param Window table — the Rayfield window returned by CreateWindow
---- @return table self
-function PlayerSettings:BuildUI(Window)
-    -- Create the Player tab
-    local PlayerTab = Window:CreateTab("Player", "user")  -- "user" is a Lucide icon
-    self._PlayerTab = PlayerTab
-
-    -- Create the Money & Crates section
-    local Section = PlayerTab:CreateSection("Money & Crates")
-    self._Section = Section
-
-    -- ── CrateLuck (number) ────────────────────────────────────────────────
-
-    -- Label showing current value
-    self._CrateLuckLabel = PlayerTab:CreateLabel(
-        "CrateLuck: " .. tostring(self._state.CrateLuck),
-        nil, nil, true
-    )
-
-    -- Input field for new value
-    local crateLuckInput = PlayerTab:CreateInput({
-        Name = "New CrateLuck Value",
-        CurrentValue = tostring(self._state.CrateLuck),
-        PlaceholderText = "Enter a number...",
-        RemoveTextAfterFocusLost = false,
-        Callback = function() end,  -- We handle via the button instead
-    })
-    self._CrateLuckInput = crateLuckInput
-
-    -- Confirm button
-    local crateLuckBtn = PlayerTab:CreateButton({
-        Name = "Apply CrateLuck",
-        Callback = function()
-            local val = tonumber(crateLuckInput.CurrentValue)
-            if val then
-                self:SetCrateLuck(val)
-            end
-        end,
+    self._ui = lib.new({
+        title      = config.title or (game.Name .. " Menu"),
+        x          = config.x or 200,
+        y          = config.y or 100,
+        width      = config.width or 700,
+        height     = config.height or 500,
+        toggleKey  = config.toggleKey or Enum.KeyCode.Home,
     })
 
-    -- ── InfinityPity (number + lock toggle) ───────────────────────────────
-
-    -- Label showing current value
-    self._InfinityPityLabel = PlayerTab:CreateLabel(
-        "InfinityPity: " .. tostring(self._state.InfinityPity),
-        nil, nil, true
-    )
-
-    -- Lock toggle (checkmark)
-    local infinityLockToggle = PlayerTab:CreateToggle({
-        Name = "Lock InfinityPity",
-        CurrentValue = self._state.InfinityPityLocked,
-        Callback = function(Value)
-            self:SetInfinityPityLocked(Value)
-        end,
-    })
-    self._InfinityLockToggle = infinityLockToggle
-
-    -- Input field for new value
-    local infinityInput = PlayerTab:CreateInput({
-        Name = "New InfinityPity Value",
-        CurrentValue = tostring(self._state.InfinityPity),
-        PlaceholderText = "Enter a number...",
-        RemoveTextAfterFocusLost = false,
-        Callback = function() end,
-    })
-    self._InfinityPityInput = infinityInput
-
-    -- Confirm button
-    local infinityBtn = PlayerTab:CreateButton({
-        Name = "Apply InfinityPity",
-        Callback = function()
-            if self._state.InfinityPityLocked then
-                return  -- Value is locked, do nothing
-            end
-            local val = tonumber(infinityInput.CurrentValue)
-            if val then
-                self:SetInfinityPity(val)
-            end
-        end,
-    })
-    self._InfinityPityButton = infinityBtn
-
-    -- ── GoldenClover (bool) ───────────────────────────────────────────────
-
-    self._GoldenCloverToggle = PlayerTab:CreateToggle({
-        Name = "GoldenClover",
-        CurrentValue = self._state.GoldenClover,
-        Callback = function(Value)
-            self._state.GoldenClover = Value
-            if self.OnGoldenCloverChanged then
-                self.OnGoldenCloverChanged(Value)
-            end
-        end,
-    })
-
-    -- ── PremiumBoost (bool) ───────────────────────────────────────────────
-
-    self._PremiumBoostToggle = PlayerTab:CreateToggle({
-        Name = "PremiumBoost",
-        CurrentValue = self._state.PremiumBoost,
-        Callback = function(Value)
-            self._state.PremiumBoost = Value
-            if self.OnPremiumBoostChanged then
-                self.OnPremiumBoostChanged(Value)
-            end
-        end,
-    })
-
-    -- ── VipSmuggler (bool) ────────────────────────────────────────────────
-
-    self._VipSmugglerToggle = PlayerTab:CreateToggle({
-        Name = "VipSmuggler",
-        CurrentValue = self._state.VipSmuggler,
-        Callback = function(Value)
-            self._state.VipSmuggler = Value
-            if self.OnVipSmugglerChanged then
-                self.OnVipSmugglerChanged(Value)
-            end
-        end,
-    })
-
-    return self
+    buildUI(self._ui)
+    self._ui:Start()
+    self._started = true
+    return self._ui
 end
 
-return PlayerSettings
+-- ── Init: attach to an already-running UI instance ──
+-- Use this when you already have a MainUILib instance and just
+-- want to add the Player > Money & Crates section without
+-- creating a whole new window.
+function PlayerModule:Init(existingUI)
+    if not existingUI then
+        warn("[PlayerModule] Init requires an existing MainUILib instance")
+        return
+    end
+    self._ui = existingUI
+    buildUI(self._ui)
+    self._started = true
+    return self._ui
+end
+
+-- ── Toggle visibility ──
+function PlayerModule:Toggle()
+    if self._ui then
+        self._ui:SetVisible(not self._ui.visible)
+    end
+end
+
+-- ── Destroy ──
+function PlayerModule:Destroy()
+    if self._ui then
+        self._ui:Destroy()
+    end
+    self._ui = nil
+    self._started = false
+end
+
+return PlayerModule
