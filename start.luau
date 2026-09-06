@@ -1,14 +1,21 @@
 --[[
-=========================================
-  RAYFIELD UI LOADER — Main Menu + Settings
-  Features:
-    - Auto-loads game-specific script from GitHub by PlaceId
-    - Main menu tab with player info and quick actions
-    - Settings tab with theme, keybind, and about
-    - Floating settings button (bottom-left) via Drawing API
-    - Configuration saving
-=========================================
-]]
+start.luau — RAYFIELD UI LOADER (Recoded)
+============================================
+Features:
+- Auto-loads game-specific script from GitHub by PlaceId
+- Module loading system — submodules register into the main Rayfield window
+- Main menu tab with player info and quick actions
+- Settings tab with theme, keybind, and about
+- Floating settings button (bottom-left) via Drawing API
+- Configuration saving
+
+Module system:
+  Submodules are scripts loaded from:
+    https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Modules/<ModuleName>.lua
+
+  Each module receives the Rayfield Window object and can add tabs/sections/elements.
+  Modules are stored in the `LoadedModules` table and can be reloaded.
+--]]
 
 -- ── Optional: Anti-detection (uncomment & set your own asset ID) ──
 -- getgenv().RAYFIELD_SECURE = true
@@ -23,25 +30,72 @@ local Player = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
 
 -- ==========================================================
+--  MODULE LOADER SYSTEM
+-- ==========================================================
+local MODULE_BASE_URL = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Modules/"
+local LoadedModules = {}   -- { [moduleName] = { name, tab, elements } }
+
+local function LoadModule(Window, moduleName)
+    if LoadedModules[moduleName] then
+        return false, "Module '" .. moduleName .. "' is already loaded"
+    end
+
+    local url = MODULE_BASE_URL .. moduleName .. ".lua"
+    local success, result = pcall(function()
+        return game:HttpGet(url)
+    end)
+
+    if not success or not result or #result == 0 then
+        return false, "Failed to fetch module: " .. tostring(result or "empty response")
+    end
+
+    local loadSuccess, moduleFunc = pcall(loadstring, result)
+    if not loadSuccess then
+        return false, "Failed to compile module: " .. tostring(moduleFunc)
+    end
+
+    local ok, moduleResult = pcall(moduleFunc, Window, Rayfield)
+    if not ok then
+        return false, "Module execution error: " .. tostring(moduleResult)
+    end
+
+    LoadedModules[moduleName] = {
+        name     = moduleName,
+        result   = moduleResult,
+    }
+
+    return true, "Module '" .. moduleName .. "' loaded successfully"
+end
+
+local function UnloadModule(moduleName)
+    if not LoadedModules[moduleName] then
+        return false, "Module '" .. moduleName .. "' is not loaded"
+    end
+    LoadedModules[moduleName] = nil
+    return true, "Module '" .. moduleName .. "' unloaded"
+end
+
+local function ReloadModule(Window, moduleName)
+    UnloadModule(moduleName)
+    return LoadModule(Window, moduleName)
+end
+
+-- ==========================================================
 --  GAME-SPECIFIC SCRIPT LOADER (by PlaceId)
 -- ==========================================================
 local PlaceId = game.PlaceId
 local GitHubURL = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Games/"
 local ScriptURL = GitHubURL .. tostring(PlaceId) .. "/main.lua"
-
 local GameScriptLoaded = false
 
--- Attempt to load the game-specific script
 local function LoadGameScript()
     local success, result = pcall(function()
         return game:HttpGet(ScriptURL)
     end)
-
     if success and result and #result > 0 then
         local loadSuccess, loadErr = pcall(function()
             loadstring(result)()
         end)
-
         if loadSuccess then
             GameScriptLoaded = true
             return true, "Game script loaded successfully"
@@ -51,20 +105,6 @@ local function LoadGameScript()
     else
         return false, "No game script found for PlaceId " .. tostring(PlaceId)
     end
-end
-
--- ==========================================================
---  HELPER: Safe health reader
--- ==========================================================
-local function GetPlayerHealth()
-    local char = Player.Character
-    if char then
-        local humanoid = char:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            return math.floor(humanoid.Health)
-        end
-    end
-    return 100
 end
 
 -- ==========================================================
@@ -99,7 +139,7 @@ local PlayerLabel = MainTab:CreateLabel(
 )
 
 local HealthLabel = MainTab:CreateLabel(
-    "Health: " .. GetPlayerHealth(),
+    "Health: " .. math.floor(Player.Health or 100),
     "heart",
     Color3.fromRGB(220, 120, 120),
     false
@@ -109,7 +149,7 @@ spawn(function()
     while task.wait(1) do
         pcall(function()
             HealthLabel:Set(
-                "Health: " .. GetPlayerHealth(),
+                "Health: " .. math.floor(Player.Health),
                 "heart",
                 Color3.fromRGB(220, 120, 120),
                 false
@@ -120,7 +160,6 @@ end)
 
 MainTab:CreateSection("Game Script")
 
--- Status label for the game script loader
 local ScriptStatus = MainTab:CreateLabel(
     "Checking game script...",
     "loader",
@@ -128,7 +167,6 @@ local ScriptStatus = MainTab:CreateLabel(
     false
 )
 
--- PlaceId display
 local PlaceIdLabel = MainTab:CreateLabel(
     "Place ID: " .. tostring(PlaceId),
     "hash",
@@ -136,7 +174,6 @@ local PlaceIdLabel = MainTab:CreateLabel(
     false
 )
 
--- Button to manually reload the game script
 local ReloadScriptBtn = MainTab:CreateButton({
     Name = "Reload Game Script",
     Callback = function()
@@ -157,6 +194,45 @@ local ReloadScriptBtn = MainTab:CreateButton({
                 Duration = 4,
                 Image = "x-circle",
             })
+        end
+    end,
+})
+
+MainTab:CreateSection("Module Manager")
+
+local ModuleStatus = MainTab:CreateLabel(
+    "No modules loaded",
+    "package",
+    Color3.fromRGB(180, 180, 180),
+    false
+)
+
+-- Module input for loading by name
+local ModuleInput = MainTab:CreateInput({
+    Name = "Load Module",
+    CurrentValue = "",
+    PlaceholderText = "Module name (e.g. Player)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        if #Text > 0 then
+            local ok, msg = LoadModule(Window, Text)
+            if ok then
+                ModuleStatus:Set("Module '" .. Text .. "' loaded!", "check-circle", Color3.fromRGB(120, 220, 120), false)
+                Rayfield:Notify({
+                    Title = "Module Loader",
+                    Content = "'" .. Text .. "' loaded successfully",
+                    Duration = 4,
+                    Image = "check-circle",
+                })
+            else
+                ModuleStatus:Set("Failed: " .. msg, "x-circle", Color3.fromRGB(220, 120, 120), false)
+                Rayfield:Notify({
+                    Title = "Module Loader",
+                    Content = msg,
+                    Duration = 4,
+                    Image = "x-circle",
+                })
+            end
         end
     end,
 })
@@ -236,7 +312,7 @@ SettingsTab:CreateSection("About")
 
 SettingsTab:CreateParagraph({
     Title = "About",
-    Content = "Rayfield UI Loader\nVersion 1.0\nAuto-loads game scripts by PlaceId"
+    Content = "Rayfield UI Loader\nVersion 2.0 — Module System\nAuto-loads game scripts + UI modules by name"
 })
 
 -- ==========================================================
@@ -245,16 +321,13 @@ SettingsTab:CreateParagraph({
 local SettingsBtn = Drawing.new("Square")
 local SettingsBtnText = Drawing.new("Text")
 local SettingsBtnHover = Drawing.new("Square")
-
 local BtnSize = 36
 local BtnPadding = 12
 local BtnX = BtnPadding
 local BtnY = 0
-
 local BtnColor = Color3.fromRGB(35, 35, 35)
 local BtnHoverColor = Color3.fromRGB(55, 55, 55)
 local BtnIconColor = Color3.fromRGB(150, 150, 150)
-
 local SettingsBtnVisible = true
 local isHovering = false
 
@@ -282,10 +355,8 @@ spawn(function()
             SettingsBtnHover.Visible = false
             continue
         end
-
         local ViewportSize = workspace.CurrentCamera.ViewportSize
         local screenH = ViewportSize.Y
-
         BtnY = screenH - BtnSize - BtnPadding
 
         SettingsBtn.Position = Vector2.new(BtnX, BtnY)
@@ -313,7 +384,7 @@ local connSettings = UserInputService.InputBegan:Connect(function(input, process
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         local mx, my = input.Position.X, input.Position.Y
         if mx >= BtnX and mx <= BtnX + BtnSize
-        and my >= BtnY and my <= BtnY + BtnSize then
+            and my >= BtnY and my <= BtnY + BtnSize then
             local isVisible = Rayfield:IsVisible()
             Rayfield:SetVisibility(not isVisible)
         end
@@ -325,7 +396,7 @@ local connHover = UserInputService.InputChanged:Connect(function(input, processe
     if input.UserInputType == Enum.UserInputType.MouseMovement then
         local mx, my = input.Position.X, input.Position.Y
         isHovering = mx >= BtnX and mx <= BtnX + BtnSize
-                and my >= BtnY and my <= BtnY + BtnSize
+            and my >= BtnY and my <= BtnY + BtnSize
     end
 end)
 
@@ -369,6 +440,31 @@ spawn(function()
     end
 end)
 
+-- ==========================================================
+--  AUTO-LOAD MODULES (add module names here)
+-- ==========================================================
+spawn(function()
+    task.wait(2.5)
+    -- Modules listed here will auto-load on startup.
+    -- Each module script lives at:
+    --   https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/Modules/<Name>.lua
+    --
+    -- Example: to auto-load the Player module, add "Player" to the list:
+    -- local autoModules = { "Player" }
+    local autoModules = {}  -- add module names here
+
+    for _, modName in ipairs(autoModules) do
+        local ok, msg = LoadModule(Window, modName)
+        if ok then
+            ModuleStatus:Set("Auto-loaded: " .. modName, "check-circle", Color3.fromRGB(120, 220, 120), false)
+        else
+            warn("[ModuleLoader] Auto-load failed for '" .. modName .. "': " .. msg)
+        end
+        task.wait(0.3)
+    end
+end)
+
 print("UI Loader loaded successfully!")
 print("PlaceId:", PlaceId)
 print("Script URL:", ScriptURL)
+print("Module URL:", MODULE_BASE_URL .. "<ModuleName>.lua")
