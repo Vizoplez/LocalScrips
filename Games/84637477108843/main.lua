@@ -268,6 +268,6 @@ return function(Window, Rayfield)
             end)
         end
     end)
-
+    PlayerSub:Open()
     print("[PlayerModule] Loaded into Rayfield successfully")
 end
