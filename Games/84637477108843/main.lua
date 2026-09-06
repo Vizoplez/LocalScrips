@@ -1,17 +1,18 @@
 --[[
-PlayerSubModule.lua
-=====================
-Submodule for MainUILib — creates a Player > Money & Crates section
-with number controls (CrateLuck, InfinityPity) and bool toggles
-(GoldenClover, PremiumBoost, VipSmuggler).
+PlayerSubModule.lua — RAYFIELD MODULE
+========================================
+Submodule for the Rayfield-based start.luau loader.
+Creates a "Player" tab with "Money & Crates" section containing:
+  - CrateLuck    (number input + confirm)
+  - InfinityPity (number input + confirm + lock toggle)
+  - GoldenClover (boolean toggle)
+  - PremiumBoost (boolean toggle)
+  - VipSmuggler  (boolean toggle)
 
-Usage:
-    local PlayerUI = loadstring(game:HttpGet("url/to/this/file.lua"))()
-    PlayerUI:Open()
-
-Or integrate with an existing UI instance:
-    local PlayerUI = loadstring(game:HttpGet("url/to/this/file.lua"))()
-    PlayerUI:Init(existingUI)  -- skips creating a new UI
+Module contract — receives (Window, Rayfield):
+    return function(Window, Rayfield)
+        -- add your UI elements here
+    end
 --]]
 
 local Players = game:GetService("Players")
@@ -26,9 +27,20 @@ local DEFAULTS = {
     VipSmuggler  = false,
 }
 
-local PlayerModule = {}
+-- ── State ──
+local confirmedValues = {
+    CrateLuck    = 0,
+    InfinityPity = 0,
+}
+local lockedFlags = {
+    InfinityPity = false,
+}
+local inputTexts = {
+    CrateLuck    = "",
+    InfinityPity = "",
+}
 
--- ── Ensure all attributes exist on the player ──
+-- ── Ensure all attributes exist ──
 local function initAttributes()
     for k, v in pairs(DEFAULTS) do
         if player:GetAttribute(k) == nil then
@@ -37,96 +49,225 @@ local function initAttributes()
     end
 end
 
--- ── Load the UI library ──
-local function loadUILib()
-    local url = "https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua"
-    local ok, result = pcall(game.HttpGet, game, url)
-    if not ok then
-        warn("[PlayerModule] Failed to load MainUILib:", result)
-        return nil
-    end
-    local ok2, lib = pcall(loadstring, result)
-    if not ok2 then
-        warn("[PlayerModule] Failed to compile MainUILib:", lib)
-        return nil
-    end
-    return lib()
+-- ── Lock loop: re-applies locked values every 1s ──
+local function startLockLoop()
+    task.spawn(function()
+        while task.wait(1) do
+            for attr, locked in pairs(lockedFlags) do
+                if locked and confirmedValues[attr] ~= nil then
+                    pcall(player.SetAttribute, player, attr, confirmedValues[attr])
+                end
+            end
+        end
+    end)
 end
 
--- ── Build the UI elements ──
-local function buildUI(UI)
+-- ── Apply a number value to attribute and confirmed state ──
+local function applyNumber(attr, value)
+    local num = tonumber(value)
+    if num == nil then return end
+    confirmedValues[attr] = num
+    pcall(player.SetAttribute, player, attr, num)
+end
+
+-- ── Module entry point ──
+return function(Window, Rayfield)
     initAttributes()
+    startLockLoop()
 
-    local sub  = UI:Sub("Player")
-    local tab  = UI:Tab("Player", "Money & Crates")
+    local Tab = Window:CreateTab("Player", "user")
 
-    -- Number controls
-    UI:AddNum(tab, "CrateLuck",    "CrateLuck")
-    UI:AddNum(tab, "InfinityPity", "InfinityPity")
+    Tab:CreateSection("Money & Crates")
 
-    -- Bool controls
-    UI:AddBool(tab, "GoldenClover", "GoldenClover")
-    UI:AddBool(tab, "PremiumBoost", "PremiumBoost")
-    UI:AddBool(tab, "VipSmuggler",  "VipSmuggler")
-
-    UI:Select("Player", "Money & Crates")
-end
-
--- ── Open: creates a fresh UI instance and starts it ──
-function PlayerModule:Open(config)
-    config = config or {}
-    if self._ui and self._started then
-        self._ui:SetVisible(true)
-        return self._ui
-    end
-
-    local lib = loadUILib()
-    if not lib then return nil end
-
-    self._ui = lib.new({
-        title      = config.title or (game.Name .. " Menu"),
-        x          = config.x or 200,
-        y          = config.y or 100,
-        width      = config.width or 700,
-        height     = config.height or 500,
-        toggleKey  = config.toggleKey or Enum.KeyCode.Home,
+    -- ── CrateLuck ──
+    local CrateLuckInput = Tab:CreateInput({
+        Name = "CrateLuck",
+        CurrentValue = tostring(player:GetAttribute("CrateLuck") or 0),
+        PlaceholderText = "Enter value...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(text)
+            inputTexts.CrateLuck = text
+        end,
     })
 
-    buildUI(self._ui)
-    self._ui:Start()
-    self._started = true
-    return self._ui
-end
+    Tab:CreateButton({
+        Name = "Confirm CrateLuck",
+        Callback = function()
+            local val = inputTexts.CrateLuck
+            if val and #val > 0 then
+                applyNumber("CrateLuck", val)
+                local num = tonumber(val)
+                CrateLuckInput:Set(tostring(num or 0))
+                Rayfield:Notify({
+                    Title = "CrateLuck",
+                    Content = "Set to " .. tostring(num or 0),
+                    Duration = 3,
+                    Image = "check-circle",
+                })
+            end
+        end,
+    })
 
--- ── Init: attach to an already-running UI instance ──
--- Use this when you already have a MainUILib instance and just
--- want to add the Player > Money & Crates section without
--- creating a whole new window.
-function PlayerModule:Init(existingUI)
-    if not existingUI then
-        warn("[PlayerModule] Init requires an existing MainUILib instance")
-        return
-    end
-    self._ui = existingUI
-    buildUI(self._ui)
-    self._started = true
-    return self._ui
-end
+    -- ── InfinityPity ──
+    Tab:CreateSection("InfinityPity")
 
--- ── Toggle visibility ──
-function PlayerModule:Toggle()
-    if self._ui then
-        self._ui:SetVisible(not self._ui.visible)
-    end
-end
+    local InfinityPityInput = Tab:CreateInput({
+        Name = "InfinityPity Value",
+        CurrentValue = tostring(player:GetAttribute("InfinityPity") or 0),
+        PlaceholderText = "Enter value...",
+        RemoveTextAfterFocusLost = false,
+        Callback = function(text)
+            inputTexts.InfinityPity = text
+        end,
+    })
 
--- ── Destroy ──
-function PlayerModule:Destroy()
-    if self._ui then
-        self._ui:Destroy()
-    end
-    self._ui = nil
-    self._started = false
-end
+    Tab:CreateButton({
+        Name = "Confirm InfinityPity",
+        Callback = function()
+            local val = inputTexts.InfinityPity
+            if val and #val > 0 then
+                applyNumber("InfinityPity", val)
+                local num = tonumber(val)
+                InfinityPityInput:Set(tostring(num or 0))
+                Rayfield:Notify({
+                    Title = "InfinityPity",
+                    Content = "Set to " .. tostring(num or 0),
+                    Duration = 3,
+                    Image = "check-circle",
+                })
+            end
+        end,
+    })
 
-return PlayerModule
+    Tab:CreateToggle({
+        Name = "Lock InfinityPity",
+        CurrentValue = false,
+        Flag = "LockInfinityPity",
+        Callback = function(Value)
+            lockedFlags.InfinityPity = Value
+            if Value then
+                -- Re-apply the confirmed value immediately
+                if confirmedValues.InfinityPity ~= nil then
+                    pcall(player.SetAttribute, player, "InfinityPity", confirmedValues.InfinityPity)
+                end
+                Rayfield:Notify({
+                    Title = "InfinityPity",
+                    Content = "Value locked!",
+                    Duration = 3,
+                    Image = "lock",
+                })
+            else
+                Rayfield:Notify({
+                    Title = "InfinityPity",
+                    Content = "Value unlocked",
+                    Duration = 3,
+                    Image = "unlock",
+                })
+            end
+        end,
+    })
+
+    -- ── Bool toggles ──
+    Tab:CreateSection("Boosts")
+
+    Tab:CreateToggle({
+        Name = "GoldenClover",
+        CurrentValue = player:GetAttribute("GoldenClover") or false,
+        Flag = "GoldenClover",
+        Callback = function(Value)
+            pcall(player.SetAttribute, player, "GoldenClover", Value)
+        end,
+    })
+
+    Tab:CreateToggle({
+        Name = "PremiumBoost",
+        CurrentValue = player:GetAttribute("PremiumBoost") or false,
+        Flag = "PremiumBoost",
+        Callback = function(Value)
+            pcall(player.SetAttribute, player, "PremiumBoost", Value)
+        end,
+    })
+
+    Tab:CreateToggle({
+        Name = "VipSmuggler",
+        CurrentValue = player:GetAttribute("VipSmuggler") or false,
+        Flag = "VipSmuggler",
+        Callback = function(Value)
+            pcall(player.SetAttribute, player, "VipSmuggler", Value)
+        end,
+    })
+
+    -- ── Current values display ──
+    Tab:CreateSection("Current Values")
+
+    local CrateLuckLabel = Tab:CreateLabel(
+        "CrateLuck: " .. tostring(player:GetAttribute("CrateLuck") or 0),
+        "hash",
+        Color3.fromRGB(200, 200, 200),
+        false
+    )
+    local InfinityPityLabel = Tab:CreateLabel(
+        "InfinityPity: " .. tostring(player:GetAttribute("InfinityPity") or 0),
+        "hash",
+        Color3.fromRGB(200, 200, 200),
+        false
+    )
+    local GoldenCloverLabel = Tab:CreateLabel(
+        "GoldenClover: " .. tostring(player:GetAttribute("GoldenClover") or false),
+        "toggle-left",
+        Color3.fromRGB(200, 200, 200),
+        false
+    )
+    local PremiumBoostLabel = Tab:CreateLabel(
+        "PremiumBoost: " .. tostring(player:GetAttribute("PremiumBoost") or false),
+        "toggle-left",
+        Color3.fromRGB(200, 200, 200),
+        false
+    )
+    local VipSmugglerLabel = Tab:CreateLabel(
+        "VipSmuggler: " .. tostring(player:GetAttribute("VipSmuggler") or false),
+        "toggle-left",
+        Color3.fromRGB(200, 200, 200),
+        false
+    )
+
+    -- ── Live-update labels ──
+    task.spawn(function()
+        while task.wait(0.5) do
+            pcall(function()
+                CrateLuckLabel:Set(
+                    "CrateLuck: " .. tostring(player:GetAttribute("CrateLuck") or 0),
+                    "hash",
+                    Color3.fromRGB(200, 200, 200),
+                    false
+                )
+                InfinityPityLabel:Set(
+                    "InfinityPity: " .. tostring(player:GetAttribute("InfinityPity") or 0),
+                    "hash",
+                    Color3.fromRGB(200, 200, 200),
+                    false
+                )
+                GoldenCloverLabel:Set(
+                    "GoldenClover: " .. tostring(player:GetAttribute("GoldenClover") or false),
+                    "toggle-left",
+                    Color3.fromRGB(200, 200, 200),
+                    false
+                )
+                PremiumBoostLabel:Set(
+                    "PremiumBoost: " .. tostring(player:GetAttribute("PremiumBoost") or false),
+                    "toggle-left",
+                    Color3.fromRGB(200, 200, 200),
+                    false
+                )
+                VipSmugglerLabel:Set(
+                    "VipSmuggler: " .. tostring(player:GetAttribute("VipSmuggler") or false),
+                    "toggle-left",
+                    Color3.fromRGB(200, 200, 200),
+                    false
+                )
+            end)
+        end
+    end)
+
+    print("[PlayerModule] Loaded into Rayfield successfully")
+end
