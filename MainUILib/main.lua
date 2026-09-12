@@ -2,7 +2,8 @@
 
 	Rayfield Interface Suite
 	by Sirius
-
+	Readme Found at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/mainUILib_API_Docs.md
+	Raw Script Found at: https://raw.githubusercontent.com/Vizoplez/LocalScrips/refs/heads/master/MainUILib/main.lua
 	shlex  | Designing + Programming
 	iRay   | Programming
 	Max    | Programming
